@@ -4,19 +4,19 @@
 
 -export([
          start_link/3,
-         start_link/4,
+         start_link/5,
          cast/2,
          send/2
         ]).
 
--export([ws_client_init/6, ws_client_init/7]).
+-export([ws_client_init/7, ws_client_init/8]).
 
--spec start_link(URL :: string(), Handler :: module(), Args :: list()) ->
+%% @doc Start the websocket client
+-spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args) ->
     start_link(URL, Handler, Args, true, []).
 
-%% @doc Start the websocket client
 -spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args, AsyncStart, Options) ->
@@ -124,7 +124,7 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart, Options) -
 websocket_handshake(WSReq) ->
     [Protocol, Path, Host, Key, Transport, Socket, Options] =
         websocket_req:get([protocol, path, host, key, transport, socket, options], WSReq),
-    OptionsList = [[Header, ": ", Value, "\r\n"] ||
+    OptionsList = [Header, ": ", Value, "\r\n" ||
         {Header, Value} <- proplists:get_value(extra_headers, Options, [])],
     Handshake = ["GET ", Path, " HTTP/1.1\r\n"
                  "Host: ", Host, "\r\n"
