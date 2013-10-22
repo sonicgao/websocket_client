@@ -83,8 +83,8 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
               Socket,
               Transport,
               Handler,
-              Options,
-              generate_ws_key()
+              generate_ws_key(),
+              Options
              ),
     case websocket_handshake(WSReq) of
         {error, _} = HandshakeError ->
