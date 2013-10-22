@@ -85,8 +85,8 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
               Socket,
               Transport,
               Handler,
-              Options,
-              generate_ws_key()
+              generate_ws_key(),
+              Options
              ),
     {ok, Buffer} = websocket_handshake(WSReq),
     {ok, HandlerState, KeepAlive} = case Handler:init(Args, WSReq) of
