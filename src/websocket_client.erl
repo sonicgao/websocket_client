@@ -83,8 +83,8 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
               Socket,
               Transport,
               Handler,
-              generate_ws_key(),
-              Options
+              Options,
+              generate_ws_key()
              ),
     case websocket_handshake(WSReq) of
         {error, _} = HandshakeError ->
@@ -124,7 +124,7 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
 websocket_handshake(WSReq) ->
     [Protocol, Path, Host, Key, Transport, Socket, Options] =
         websocket_req:get([protocol, path, host, key, transport, socket, options], WSReq),
-    OptionsList = [Header, ": ", Value, "\r\n" ||
+    OptionsList = [[Header, ": ", Value, "\r\n"] ||
         {Header, Value} <- proplists:get_value(extra_headers, Options, [])],
     Handshake = ["GET ", Path, " HTTP/1.1\r\n"
                  "Host: ", Host, "\r\n"
