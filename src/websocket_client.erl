@@ -85,8 +85,8 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
               Socket,
               Transport,
               Handler,
-              generate_ws_key(),
-              Options
+              Options,
+              generate_ws_key()
              ),
     {ok, Buffer} = websocket_handshake(WSReq),
     {ok, HandlerState, KeepAlive} = case Handler:init(Args, WSReq) of
@@ -115,25 +115,21 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
     websocket_loop(websocket_req:set([{keepalive,KeepAlive},{keepalive_timer,KATimer}], WSReq), HandlerState, <<>>).
 
 %% @doc Send http upgrade request and validate handshake response challenge
--spec websocket_handshake(WSReq :: websocket_req:req()) ->
-                                 ok.
+-spec websocket_handshake(WSReq :: websocket_req:req()) -> {ok, binary()}.
 websocket_handshake(WSReq) ->
     [Protocol, Path, Host, Key, Transport, Socket, Options] =
         websocket_req:get([protocol, path, host, key, transport, socket, options], WSReq),
-    Handshake = [<<"GET ">>, Path,
-                <<" HTTP/1.1"
-                   "\r\nHost: ">>, Host,
-                <<"\r\nUpgrade: WebSocket"
-                  "\r\nConnection: Upgrade"
-                  "\r\nSec-WebSocket-Key: ">>, Key,
-                <<"\r\nOrigin: ">>, atom_to_binary(Protocol, utf8), <<"://">>, Host,
-                <<"\r\nSec-WebSocket-Protocol: ">>, proplists:get_value(ws_protocol, Options, <<"">>),
-                <<"\r\nSec-WebSocket-Version: 13">>,
-                [[<<"\r\n">>, Header, <<": ">>, Value] ||
-                    {Header, Value} <- proplists:get_value(extra_headers, Options, [])],
-                <<"\r\n\r\n">>],
-    Transport = websocket_req:transport(WSReq),
-    Socket =    websocket_req:socket(WSReq),
+    OptionsList = [[Header, ": ", Value, "\r\n"] ||
+        {Header, Value} <- proplists:get_value(extra_headers, Options, [])],
+    Handshake = ["GET ", Path, " HTTP/1.1\r\n"
+                 "Host: ", Host, "\r\n"
+                 "Connection: Upgrade\r\n"
+                 "Origin: ", atom_to_binary(Protocol, utf8), "://", Host, "\r\n"
+                 "Sec-WebSocket-Version: 13\r\n"
+                 "Sec-WebSocket-Key: ", Key, "\r\n"
+                 "Upgrade: websocket\r\n",
+                 OptionsList,
+                 "\r\n"],
     Transport:send(Socket, Handshake),
     {ok, HandshakeResponse} = receive_handshake(<<>>, Transport, Socket),
     {ok, Buffer} = validate_handshake(HandshakeResponse, Key),
@@ -237,11 +233,10 @@ generate_ws_key() ->
     base64:encode(crypto:rand_bytes(16)).
 
 %% @doc Validate handshake response challenge
--spec validate_handshake(HandshakeResponse :: binary(), Key :: binary()) ->
-                                ok.
+-spec validate_handshake(HandshakeResponse :: binary(), Key :: binary()) -> {ok, binary()}.
 validate_handshake(HandshakeResponse, Key) ->
     Challenge = base64:encode(
-                  crypto:sha(<< Key/binary, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" >>)),
+                  crypto:hash(sha, << Key/binary, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" >>)),
     %% Consume the response...
     {ok, _Status, Header, Buffer} = consume_response(HandshakeResponse),
     %% ...and make sure the challenge is valid.
