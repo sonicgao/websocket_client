@@ -2,22 +2,22 @@
 -module(websocket_req).
 
 -record(websocket_req, {
-          protocol :: protocol(),
-          host :: string(),
-          port :: inet:port_number(),
-          path :: string(),
-          keepalive = infinity :: integer(),
-          keepalive_timer = undefined :: reference(),
-          socket :: inet:socket() | ssl:sslsocket(),
-          transport :: module(),
-          handler :: module(),
-          key :: binary(),
-          options = [] :: list(),
-          remaining = undefined :: integer(),
-          fin = undefined :: fin(),
-          opcode = undefined :: opcode(),
-          continuation = undefined :: binary(),
-          continuation_opcode = undefined :: opcode()
+          protocol                        :: protocol(),
+          host                            :: string(),
+          port                            :: inet:port_number(),
+          path                            :: string(),
+          keepalive = infinity            :: infinity | integer(),
+          keepalive_timer = undefined     :: undefined | reference(),
+          socket                          :: inet:socket() | ssl:sslsocket(),
+          transport                       :: module(),
+          handler                         :: module(),
+          key                             :: binary(),
+          options = []                    :: list(),
+          remaining = undefined           :: undefined | integer(),
+          fin = undefined                 :: undefined | fin(),
+          opcode = undefined              :: undefined | opcode(),
+          continuation = undefined        :: undefined | binary(),
+          continuation_opcode = undefined :: undefined | opcode()
          }).
 
 -opaque req() :: #websocket_req{}.
@@ -59,9 +59,6 @@
          name_to_opcode/1
         ]).
 
--spec new(protocol(), string(), inet:port_number(),
-          string(), inet:socket() | ssl:sslsocket(),
-          module(), module(), binary()) -> req().
 new(Protocol, Host, Port, Path, Socket, Transport, Handler, Key) ->
     new(Protocol, Host, Port, Path, Socket, Transport, Handler, Key, []).
 
@@ -174,14 +171,12 @@ key(#websocket_req{key = K}) -> K.
 key(K, Req) ->
     Req#websocket_req{key = K}.
 
-
 -spec options(req()) -> list().
 options(#websocket_req{options = O}) -> O.
 
 -spec options(list(), req()) -> req().
 options(O, Req) ->
     Req#websocket_req{options = O}.
-
 
 -spec remaining(req()) -> undefined | integer().
 remaining(#websocket_req{remaining = R}) -> R.
@@ -230,6 +225,7 @@ g(host, #websocket_req{host = Ret}) -> Ret;
 g(port, #websocket_req{port = Ret}) -> Ret;
 g(path, #websocket_req{path = Ret}) -> Ret;
 g(keepalive, #websocket_req{keepalive = Ret}) -> Ret;
+g(keepalive_timer, #websocket_req{keepalive_timer = Ret}) -> Ret;
 g(socket, #websocket_req{socket = Ret}) -> Ret;
 g(transport, #websocket_req{transport = Ret}) -> Ret;
 g(handler, #websocket_req{handler = Ret}) -> Ret;

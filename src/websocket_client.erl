@@ -11,12 +11,12 @@
 
 -export([ws_client_init/6, ws_client_init/7]).
 
-%% @doc Start the websocket client
 -spec start_link(URL :: string(), Handler :: module(), Args :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args) ->
     start_link(URL, Handler, Args, []).
 
+%% @doc Start the websocket client
 -spec start_link(URL :: string(), Handler :: module(), Args :: list(), Options :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args, Options) ->
@@ -48,7 +48,6 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args) ->
                      Args :: list(), Options :: list()) ->
                             no_return().
 ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
-
     Transport = case Protocol of
                     wss ->
                         ssl;
@@ -85,8 +84,8 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
               Socket,
               Transport,
               Handler,
-              Options,
-              generate_ws_key()
+              generate_ws_key(),
+              Options
              ),
     {ok, Buffer} = websocket_handshake(WSReq),
     {ok, HandlerState, KeepAlive} = case Handler:init(Args, WSReq) of
