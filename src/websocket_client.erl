@@ -17,6 +17,7 @@
 start_link(URL, Handler, Args) ->
     start_link(URL, Handler, Args, true, []).
 
+%% @doc Start the websocket client
 -spec start_link(URL :: string(), Handler :: module(), Args :: list(), Options :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args, AsyncStart, Options) ->
@@ -83,8 +84,8 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
               Socket,
               Transport,
               Handler,
-              Options,
-              generate_ws_key()
+              generate_ws_key(),
+              Options
              ),
     case websocket_handshake(WSReq) of
         {error, _} = HandshakeError ->
