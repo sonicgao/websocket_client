@@ -4,26 +4,26 @@
 
 -export([
          start_link/3,
-         start_link/4,
+         start_link/5,
          cast/2,
          send/2
         ]).
 
--export([ws_client_init/6, ws_client_init/7]).
+-export([ws_client_init/7, ws_client_init/8]).
 
 -spec start_link(URL :: string(), Handler :: module(), Args :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args) ->
-    start_link(URL, Handler, Args, []).
+    start_link(URL, Handler, Args, true, []).
 
 %% @doc Start the websocket client
--spec start_link(URL :: string(), Handler :: module(), Args :: list(), Options :: list()) ->
+-spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
                         {ok, pid()} | {error, term()}.
-start_link(URL, Handler, Args, Options) ->
+start_link(URL, Handler, Args, AsyncStart, Options) ->
     case http_uri:parse(URL, [{scheme_defaults, [{ws,80},{wss,443}]}]) of
         {ok, {Protocol, _, Host, Port, Path, Query}} ->
             proc_lib:start_link(?MODULE, ws_client_init,
-                                [Handler, Protocol, Host, Port, Path ++ Query, Args, Options]);
+                                [Handler, Protocol, Host, Port, Path ++ Query, Args, AsyncStart, Options]);
         {error, _} = Error ->
             Error
     end.
@@ -38,16 +38,16 @@ cast(Client, Frame) ->
 %% @doc Create socket, execute handshake, and enter loop
 -spec ws_client_init(Handler :: module(), Protocol :: websocket_req:protocol(),
                      Host :: string(), Port :: inet:port_number(), Path :: string(),
-                     Args :: list()) ->
+                     Args :: list(), AsyncStart :: boolean()) ->
                             no_return().
-ws_client_init(Handler, Protocol, Host, Port, Path, Args) ->
-    ws_client_init(Handler, Protocol, Host, Port, Path, Args, []).
+ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart) ->
+    ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart, []).
 
 -spec ws_client_init(Handler :: module(), Protocol :: websocket_req:protocol(),
                      Host :: string(), Port :: inet:port_number(), Path :: string(),
-                     Args :: list(), Options :: list()) ->
+                     Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
                             no_return().
-ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
+ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart, Options) ->
     Transport = case Protocol of
                     wss ->
                         ssl;
@@ -91,13 +91,14 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
             proc_lib:init_ack(HandshakeError),
             exit(normal);
         {ok, Buffer} ->
-            proc_lib:init_ack({ok, self()}),
+            AsyncStart andalso proc_lib:init_ack({ok, self()}),
             {ok, HandlerState, KeepAlive} = case Handler:init(Args, WSReq) of
                                                 {ok, HS} ->
                                                     {ok, HS, infinity};
                                                 {ok, HS, KA} ->
                                                     {ok, HS, KA}
                                             end,
+            AsyncStart orelse proc_lib:init_ack({ok, self()}),
             case Socket of
                 {sslsocket, _, _} ->
                     ssl:setopts(Socket, [{active, true}]);
