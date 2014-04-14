@@ -12,13 +12,13 @@
 -export([ws_client_init/7, ws_client_init/8]).
 
 %% @doc Start the websocket client
--spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean()) ->
+-spec start_link(URL :: string(), Handler :: module(), Args :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args) ->
     start_link(URL, Handler, Args, true, []).
 
 %% @doc Start the websocket client
--spec start_link(URL :: string(), Handler :: module(), Args :: list(), Options :: list()) ->
+-spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args, AsyncStart, Options) ->
     case http_uri:parse(URL, [{scheme_defaults, [{ws,80},{wss,443}]}]) of
@@ -41,14 +41,14 @@ cast(Client, Frame) ->
                      Host :: string(), Port :: inet:port_number(), Path :: string(),
                      Args :: list(), AsyncStart :: boolean()) ->
                             no_return().
-ws_client_init(Handler, Protocol, Host, Port, Path, Args) ->
+ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart) ->
     ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart, []).
 
 -spec ws_client_init(Handler :: module(), Protocol :: websocket_req:protocol(),
                      Host :: string(), Port :: inet:port_number(), Path :: string(),
                      Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
                             no_return().
-ws_client_init(Handler, Protocol, Host, Port, Path, Args, Options) ->
+ws_client_init(Handler, Protocol, Host, Port, Path, Args, AsyncStart, Options) ->
     Transport = case Protocol of
                     wss ->
                         ssl;
