@@ -1,6 +1,7 @@
 ebin/*
 deps/*
 *.beam
+*.orig
 .eunit/*
 erl_crash.dump
 log/*
