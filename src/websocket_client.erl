@@ -4,6 +4,7 @@
 
 -export([
          start_link/3,
+         start_link/4,
          start_link/5,
          cast/2,
          send/2
@@ -16,6 +17,12 @@
                         {ok, pid()} | {error, term()}.
 start_link(URL, Handler, Args) ->
     start_link(URL, Handler, Args, true, []).
+
+%% @doc Start the websocket client
+-spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
+                        {ok, pid()} | {error, term()}.
+start_link(URL, Handler, Args) ->
+    start_link(URL, Handler, Args, AsyncStart, []).
 
 %% @doc Start the websocket client
 -spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
