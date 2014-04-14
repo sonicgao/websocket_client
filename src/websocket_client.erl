@@ -19,9 +19,9 @@ start_link(URL, Handler, Args) ->
     start_link(URL, Handler, Args, true, []).
 
 %% @doc Start the websocket client
--spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean(), Options :: list()) ->
+-spec start_link(URL :: string(), Handler :: module(), Args :: list(), AsyncStart :: boolean()) ->
                         {ok, pid()} | {error, term()}.
-start_link(URL, Handler, Args) ->
+start_link(URL, Handler, Args, AsyncStart) ->
     start_link(URL, Handler, Args, AsyncStart, []).
 
 %% @doc Start the websocket client
