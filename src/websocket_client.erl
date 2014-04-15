@@ -140,7 +140,7 @@ websocket_handshake(WSReq) ->
                  "Origin: ", atom_to_binary(Protocol, utf8), "://", Host, "\r\n"
                  "Sec-WebSocket-Version: 13\r\n"
                  "Sec-WebSocket-Key: ", Key, "\r\n"
-                 "Upgrade: websocket\r\n"] ++ OptionsList ++ ["\r\n"],
+                 "Upgrade: websocket\r\n"] ++ lists:merge(OptionsList) ++ ["\r\n"],
     Transport:send(Socket, Handshake),
     {ok, HandshakeResponse} = receive_handshake(<<>>, Transport, Socket),
     validate_handshake(HandshakeResponse, Key).
